@@ -1,0 +1,65 @@
+:root {
+  --accentColor: #444444;
+  --roleTextColor: #aaaaaa;
+}
+
+* {
+  margin: 0;
+  font-family: "Chunk", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+}
+
+.navBar {
+  display: flex;
+  background-color: var(--accentColor);
+  color: white;
+  padding: 8px;
+}
+
+h3 {
+  padding: 15px;
+}
+
+a {
+  text-decoration: none;
+  color: white;
+}
+
+a:hover {
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+#welcome {
+  color: white;
+  background-color: var(--accentColor);
+  padding: 30px 450px 30px 30px;
+  border: 1px solid #9b9b9b;
+}
+
+.insideContainer {
+  border: 1px solid #9b9b9b;
+}
+
+.userContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100vh;
+  margin-top: 30px;
+}
+
+h3#permissionsHeader {
+  background-color: var(--accentColor);
+  color: white;
+  padding: 0;
+}
+
+div#roles {
+  color: var(--roleTextColor);
+  margin-bottom: 50px;
+}
+
+h3#permissionIndex {
+  padding: 0;
+}

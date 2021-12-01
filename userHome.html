@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Home</title>
+    <link rel="stylesheet" href="userHome.css">
+    <script src="./SecurityManager.js"></script>
+</head>
+
+<script>
+    function loadUserHome() {
+        var user = SecurityManager.GetUserById(localStorage.getItem("user"));
+        if (user == null) {
+            window.location.href = "./index.html";
+        }
+        document.getElementById("welcome").innerHTML = "Welcome " + user.Name;
+        var rolesElement = document.getElementById("roles");
+        var permissionsElement = document.getElementById("permissions");
+        var userRoles = SecurityManager.GetAllUserRoles();
+        var rolePermissions = SecurityManager.GetAllRolePermissions();
+        let roleIndex = 1;
+        let permissionIndex = 1;
+        let currUserRoles = []
+        for (let i = 0; i < userRoles.length; i++) {
+            const userRole = userRoles[i];
+            if (user.ID == userRole.UserID) {
+                currUserRoles.push(userRole);
+                let roleElement = document.createElement("h2");
+                roleElement.innerHTML = roleIndex + ". Role: " + userRole.RoleName;
+                roleIndex++;
+                rolesElement.appendChild(roleElement);
+            }
+        }
+        for (let i = 0; i < rolePermissions.length; i++) {
+            const rolePermission = rolePermissions[i];
+            for (let j = 0; j < currUserRoles.length; j++) {
+                const currUserRole = currUserRoles[j];
+                if (rolePermission.RoleID == currUserRole.RoleID) {
+                    let permissionElement = document.createElement("h3");
+                    permissionElement.setAttribute("id", "permissionIndex");
+                    permissionElement.innerHTML = permissionIndex + ". " + rolePermission.PermissionName;
+                    permissionIndex++;
+                    permissionsElement.appendChild(permissionElement);
+                }
+            }
+        }
+        console.log(currUserRoles);
+        console.log(currUserPermissions);
+    }
+
+    function logout() {
+        localStorage.removeItem("user");
+        window.location.href = "./index.html";
+    }
+</script>
+
+<body onload="loadUserHome()">
+    <div class="navBar">
+        <h3><a href="userHome.html">Home</a></h3>
+        <h3><a onclick="logout()">Logout</a></h3>
+    </div>
+    <div class="userContainer">
+        <div class="insideContainer">
+            <h1 id="welcome">Welcome User</h1>
+            <div id="roles"></div>
+            <h3 id="permissionsHeader">Permission: </h3>
+            <div id="permissions"></div>
+        </div>
+    </div>
+</body>
+
+</html>

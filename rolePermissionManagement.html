@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./rolePermissionManagement.css">
+    <script src="SecurityManager.js"></script>
+    <title>Role Management</title>
+</head>
+
+<script>
+
+    var isEditMode = false;
+    var selectedRolePermissionForEdit = null;
+
+    let handleEdit = function (id) {
+        isEditMode = true;
+        selectedRolePermissionForEdit = SecurityManager.GetRolePermissionById(id);
+        document.getElementById("role").value = selectedRolePermissionForEdit.RoleIndex;
+        document.getElementById("permission").selectedIndex = selectedRolePermissionForEdit.PermissionIndex;
+    }
+
+    //error function
+    let errorFunction = function (error) {
+        alert(error);
+    }
+
+    //delete success function
+    let updateTableForDelete = function (id) {
+        let tableRows = document.getElementsByTagName("tr");
+        for (let i = 1; i < tableRows.length; i++) {
+            if (tableRows[i].cells[0].innerText == id) {
+                tableRows[i].remove();
+                break;
+            };
+        }
+    }
+
+    //save success function
+    let updateTableForSave = function (record) {
+        if (isEditMode) {
+            let tableRows = document.getElementsByTagName("tr");
+            for (let i = 1; i < tableRows.length; i++) {
+                if (tableRows[i].cells[0].innerText == selectedRolePermissionForEdit.ID) {
+                    tableRows[i].cells[1].innerText = record.RoleName;
+                    tableRows[i].cells[2].innerText = record.PermissionName;
+                    tableRows[i].cells[3].innerHTML = '<a id="edit">Edit</a>';
+                    tableRows[i].cells[4].innerHTML = '<a id="delete">Delete</a>';
+                    tableRows[i].cells[3].onclick = function () {
+                        var id = this.parentNode.childNodes[0].innerText
+                        handleEdit(id);
+                    };
+                    tableRows[i].cells[4].onclick = function () {
+                        var id = this.parentNode.childNodes[0].innerText
+                        if (confirm("Are you sure you want to delete role-permission with id: " + id)) {
+                            SecurityManager.DeleteRolePermission(id, updateTableForDelete, errorFunction);
+                        }
+                    }
+                }
+            }
+            isEditMode = false;
+            selectedRolePermissionForEdit = null;
+        } else {
+            var table = document.getElementById("table");
+            var row = table.insertRow(table.rows.length);
+            var cell1 = row.insertCell(0);
+            var cell2 = row.insertCell(1);
+            var cell3 = row.insertCell(2);
+            var cell4 = row.insertCell(3);
+            var cell5 = row.insertCell(4);
+            cell1.innerText = record.ID;
+            cell2.innerText = record.RoleName;
+            cell3.innerText = record.PermissionName;
+            cell4.innerHTML = '<a id="edit">Edit</a>';
+            cell5.innerHTML = '<a id="delete">Delete</a>';
+            cell4.onclick = function () {
+                var id = this.parentNode.childNodes[0].innerText
+                handleEdit(id);
+            }
+            cell5.onclick = function () {
+                var id = this.parentNode.childNodes[0].innerText
+                if (confirm("Are you sure you want to delete role-permission with id: " + id)) {
+                    SecurityManager.DeleteRolePermission(id, updateTableForDelete, errorFunction);
+                }
+            }
+        }
+    }
+
+    function loadRolePermissions() {
+        var table = document.getElementById("table");
+        var rolePermissions = SecurityManager.GetAllRolePermissions();
+        for (const key in rolePermissions) {
+            const rolePermission = rolePermissions[key];
+            var row = table.insertRow(table.rows.length);
+            var cell1 = row.insertCell(0);
+            var cell2 = row.insertCell(1);
+            var cell3 = row.insertCell(2);
+            var cell4 = row.insertCell(3);
+            var cell5 = row.insertCell(4);
+            cell1.innerText = rolePermission.ID;
+            cell2.innerText = rolePermission.RoleName;
+            cell3.innerText = rolePermission.PermissionName;
+            cell4.innerHTML = '<a id="edit">Edit</a>';
+            cell5.innerHTML = '<a id="delete">Delete</a>';
+            cell4.onclick = function () {
+                var id = this.parentNode.childNodes[0].innerText
+                handleEdit(id);
+            }
+            cell5.onclick = function () {
+                var id = this.parentNode.childNodes[0].innerText
+                if (confirm("Are you sure you want to delete role-permission with id: " + id)) {
+                    SecurityManager.DeleteRolePermission(id, updateTableForDelete, errorFunction);
+                }
+            }
+        }
+    }
+
+    function Main() {
+        var roles = SecurityManager.GetAllRoles();
+        var permissions = SecurityManager.GetAllPermissions();
+        var cmbRoles = document.getElementById('role');
+        for (var i = 0; i < roles.length; i++) {
+            var opt = document.createElement("option");
+            opt.setAttribute("value", roles[i].ID);
+            opt.innerText = roles[i].RoleName;
+            cmbRoles.appendChild(opt);
+        }
+
+        var cmbPermissions = document.getElementById('permission');
+        for (var i = 0; i < permissions.length; i++) {
+            var opt = document.createElement("option");
+            opt.setAttribute("value", permissions[i].ID);
+            opt.innerText = permissions[i].PermissionName;
+            cmbPermissions.appendChild(opt);
+        }
+        loadRolePermissions();
+    }
+
+    function clearFields() {
+        document.getElementById("role").selectedIndex = 0;
+        document.getElementById("permission").selectedIndex = 0;
+    }
+
+    function isRolePermissionUnique(roleName, permissionName) {
+        var rolePermissions = SecurityManager.GetAllRolePermissions();
+        for (const key in rolePermissions) {
+            const rolePermission = rolePermissions[key];
+            if ((rolePermission.RoleName).toUpperCase() == roleName.toUpperCase()
+                && (rolePermission.PermissionName).toUpperCase() == permissionName.toUpperCase()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    function SaveRolePermission() {
+        var rolePermissionObj = new Object();
+        rolePermissionObj.RoleName = document.getElementById("role")[document.getElementById("role").selectedIndex].innerText;
+        rolePermissionObj.RoleIndex = document.getElementById("role").selectedIndex;
+        rolePermissionObj.RoleID = document.getElementById("role")[document.getElementById("role").selectedIndex].value;
+        rolePermissionObj.PermissionName = document.getElementById("permission")[document.getElementById("permission").selectedIndex].innerText;
+        rolePermissionObj.PermissionIndex = document.getElementById("permission").selectedIndex;
+        rolePermissionObj.PermissionID = document.getElementById("permission")[document.getElementById("permission").selectedIndex].value;
+        if (document.getElementById("role").value == "Select" || document.getElementById("permission").value == "Select") {
+            alert("Please fill all fields");
+            return;
+        }
+        if (isEditMode) {
+            rolePermissionObj.ID = selectedRolePermissionForEdit.ID;
+            SecurityManager.SaveRolePermission(rolePermissionObj, updateTableForSave, errorFunction);
+            clearFields();
+            return;
+        }
+        if (isRolePermissionUnique(rolePermissionObj.RoleName, rolePermissionObj.PermissionName)) {
+            SecurityManager.SaveRolePermission(rolePermissionObj, updateTableForSave, errorFunction);
+            clearFields();
+        } else {
+            alert("Role Permission already exists");
+        }
+    }
+</script>
+
+<body onload="Main()">
+    <div class="navBar">
+        <h3><a href="adminHome.html">Home</a></h3>
+        <h3><a href="userManagement.html">User Management</a></h3>
+        <h3><a href="roleManagement.html">Role Management</a></h3>
+        <h3><a href="permissionManagement.html">Permission Management</a></h3>
+        <h3><a href="rolePermissionManagement.html">Role Permission Management</a></h3>
+        <h3><a href="userRoleManagement.html">User Role Management</a></h3>
+        <h3><a href="index.html">Logout</a></h3>
+    </div>
+    <div class="rolePermissionManagement">
+        <div class="rolePermissionManagementCard">
+            <div class="headerText">
+                <h3 class="text">Role-Permissions Management</h3>
+            </div>
+            <label for="role">Role:</label>
+            <select name="role" id="role">
+                <option value="0" selected disabled hidden>Select</option>
+            </select>
+            <label for="permission">Permission:</label>
+            <select name="permission" id="permission">
+                <option value="0" selected disabled hidden>Select</option>
+            </select>
+            <div class="btnContainer">
+                <input type="button" name="clear" value="Clear" onclick="clearFields()" />
+                <input type="button" name="submit" value="Save" onclick="SaveRolePermission()" />
+            </div>
+        </div>
+        <div class="tableContainer">
+            <table id="table">
+                <tr>
+                    <th>ID</th>
+                    <th>Role</th>
+                    <th>Permission</th>
+                    <th>Edit</th>
+                    <th>Delete</th>
+                </tr>
+            </table>
+        </div>
+    </div>
+</body>
+
+</html>

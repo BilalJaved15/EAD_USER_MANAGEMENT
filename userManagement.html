@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./userManagement.css">
+    <script src="SecurityManager.js"></script>
+    <title>User Management</title>
+</head>
+
+<script>
+
+    var isEditMode = false;
+    var selectedUserForEdit = null;
+
+    let handleEdit = function (id) {
+        isEditMode = true;
+        selectedUserForEdit = SecurityManager.GetUserById(id);
+        document.getElementById("login").value = selectedUserForEdit.Login;
+        document.getElementById("password").value = selectedUserForEdit.Password;
+        document.getElementById("name").value = selectedUserForEdit.Name;
+        document.getElementById("email").value = selectedUserForEdit.Email;
+        document.getElementById("countries").selectedIndex = selectedUserForEdit.CountryIndex;
+        document.getElementById('countries').onchange();
+        document.getElementById("cities").selectedIndex = selectedUserForEdit.CityIndex;
+    }
+
+    //error function
+    let errorFunction = function (error) {
+        alert(error);
+    }
+
+    //delete success function
+    let updateTableForDelete = function (id) {
+        let tableRows = document.getElementsByTagName("tr");
+        for (let i = 1; i < tableRows.length; i++) {
+            if (tableRows[i].cells[0].innerText == id) {
+                tableRows[i].remove();
+                break;
+            };
+        }
+    }
+
+    //save success function
+    let updateTableForSave = function (record) {
+        if (isEditMode) {
+            let tableRows = document.getElementsByTagName("tr");
+            for (let i = 1; i < tableRows.length; i++) {
+                if (tableRows[i].cells[0].innerText == selectedUserForEdit.ID) {
+                    tableRows[i].cells[1].innerText = record.Name;
+                    tableRows[i].cells[2].innerText = record.Email;
+                    tableRows[i].cells[3].innerHTML = '<a id="edit">Edit</a>';
+                    tableRows[i].cells[4].innerHTML = '<a id="delete">Delete</a>';
+                    tableRows[i].cells[3].onclick = function () {
+                        var id = this.parentNode.childNodes[0].innerText
+                        handleEdit(id);
+                    };
+                    tableRows[i].cells[4].onclick = function () {
+                        var id = this.parentNode.childNodes[0].innerText
+                        if (confirm("Are you sure you want to delete user with id: " + id)) {
+                            SecurityManager.DeleteUser(id, updateTableForDelete, errorFunction);
+                        }
+                    }
+                }
+            }
+            isEditMode = false;
+            selectedUserForEdit = null;
+        } else {
+            var row = table.insertRow(table.rows.length);
+            var cell1 = row.insertCell(0);
+            var cell2 = row.insertCell(1);
+            var cell3 = row.insertCell(2);
+            var cell4 = row.insertCell(3);
+            var cell5 = row.insertCell(4);
+            cell1.innerText = record.ID;
+            cell2.innerText = record.Name;
+            cell3.innerText = record.Email;
+            cell4.innerHTML = '<a id="edit">Edit</a>';
+            cell5.innerHTML = '<a id="delete">Delete</a>';
+            cell4.onclick = function () {
+                var id = this.parentNode.childNodes[0].innerText
+                handleEdit(id);
+            }
+            cell5.onclick = function () {
+                var id = this.parentNode.childNodes[0].innerText
+                if (confirm("Are you sure you want to delete user with id: " + id)) {
+                    SecurityManager.DeleteUser(id, updateTableForDelete, errorFunction);
+                }
+            }
+        }
+    }
+
+    function loadUsers() {
+        var table = document.getElementById("table");
+        var users = SecurityManager.GetAllUsers();
+        for (const key in users) {
+            const user = users[key];
+            var row = table.insertRow(table.rows.length);
+            var cell1 = row.insertCell(0);
+            var cell2 = row.insertCell(1);
+            var cell3 = row.insertCell(2);
+            var cell4 = row.insertCell(3);
+            var cell5 = row.insertCell(4);
+            cell1.innerText = user.ID;
+            cell2.innerText = user.Name;
+            cell3.innerText = user.Email;
+            cell4.innerHTML = '<a id="edit">Edit</a>';
+            cell5.innerHTML = '<a id="delete">Delete</a>';
+            cell4.onclick = function () {
+                var id = this.parentNode.childNodes[0].innerText
+                handleEdit(id);
+            }
+            cell5.onclick = function () {
+                var id = this.parentNode.childNodes[0].innerText
+                if (confirm("Are you sure you want to delete user with id: " + id)) {
+                    SecurityManager.DeleteUser(id, updateTableForDelete, errorFunction);
+                }
+            }
+        }
+    }
+
+    function Main() {
+        var countries = SecurityManager.GetCountries();
+        var cmb = document.getElementById('countries');
+        for (var i = 0; i < countries.length; i++) {
+            var opt = document.createElement("option");
+            opt.setAttribute("value", countries[i].CountryID);
+            opt.innerText = countries[i].Name;
+            cmb.appendChild(opt);
+        }
+        cmb.onchange = function changeCity() {
+            var citycmb = document.getElementById('cities');
+            citycmb.innerHTML = '<option value="0" selected disabled hidden>Select</option>';
+            var cities = SecurityManager.GetCitiesByCountryId(cmb.value);
+            for (var i = 0; i < cities.length; i++) {
+                var opt = document.createElement("option");
+                opt.setAttribute("value", cities[i].CityID);
+                opt.innerText = cities[i].Name;
+                citycmb.appendChild(opt);
+            }
+        }
+        loadUsers();
+    }
+
+    function clearFields() {
+        document.getElementById("login").value = "";
+        document.getElementById("password").value = "";
+        document.getElementById("name").value = "";
+        document.getElementById("email").value = "";
+        document.getElementById("countries").selectedIndex = 0;
+        document.getElementById("cities").selectedIndex = 0;
+    }
+
+    function isUserUnique(login, email) {
+        var users = SecurityManager.GetAllUsers();
+        for (const key in users) {
+            const user = users[key];
+            if (user.Login == login || user.Email == email) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    function saveUser() {
+        var userObj = new Object();
+        userObj.Login = document.getElementById("login").value;
+        userObj.Password = document.getElementById("password").value;
+        userObj.Name = document.getElementById("name").value;
+        userObj.Email = document.getElementById("email").value;
+        userObj.Country = document.getElementById("countries")[document.getElementById("countries").selectedIndex].innerText;
+        userObj.CountryIndex = document.getElementById("countries").selectedIndex;
+        userObj.City = document.getElementById("cities")[document.getElementById("cities").selectedIndex].innerText;
+        userObj.CityIndex = document.getElementById("cities").selectedIndex;
+        if (userObj.Login == "" || userObj.Password == "" || userObj.Name == "" || userObj.Email == "" || userObj.Country == "Select" || userObj.City == "Select") {
+            alert("Please fill all fields");
+            return;
+        }
+        if (isEditMode) {
+            userObj.ID = selectedUserForEdit.ID;
+            SecurityManager.SaveUser(userObj, updateTableForSave, errorFunction);
+            clearFields();
+            return;
+        }
+        if (isUserUnique(userObj.Login, userObj.Email)) {
+            SecurityManager.SaveUser(userObj, updateTableForSave, errorFunction);
+            clearFields();
+        } else {
+            alert("User with this login or email already exists");
+        }
+    }
+
+</script>
+
+<body onload="Main()">
+    <div class="navBar">
+        <h3><a href="adminHome.html">Home</a></h3>
+        <h3><a href="userManagement.html">User Management</a></h3>
+        <h3><a href="roleManagement.html">Role Management</a></h3>
+        <h3><a href="permissionManagement.html">Permission Management</a></h3>
+        <h3><a href="rolePermissionManagement.html">Role Permission Management</a></h3>
+        <h3><a href="userRoleManagement.html">User Role Management</a></h3>
+        <h3><a href="index.html">Logout</a></h3>
+    </div>
+    <div class="userManagement">
+        <div class="userManagementCard">
+            <div class="headerText">
+                <h3 class="text">User Management</h3>
+            </div>
+            <label for="login">Login:</label>
+            <input id="login" type="username" name="login" />
+            <label for="password">Password:</label>
+            <input id="password" type="password" name="password" />
+            <label for="name">Name:</label>
+            <input id="name" type="text" name="name" />
+            <label for="email">Email:</label>
+            <input id="email" type="email" name="email" />
+            <label for="countries">Country:</label>
+            <select name="countries" id="countries" onchange="addCities()">
+                <option value="0" selected disabled hidden>Select</option>
+            </select>
+            <label for="cities">City:</label>
+            <select name="cities" id="cities">
+                <option value="0" selected disabled hidden>Select</option>
+            </select>
+            <div class="btnContainer">
+                <input type="button" name="clear" value="Clear" onclick="clearFields()" />
+                <input type="button" name="submit" value="Save" onclick="saveUser()" />
+            </div>
+        </div>
+        <div class="tableContainer">
+            <table id="table">
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Edit</th>
+                    <th>Delete</th>
+                </tr>
+            </table>
+        </div>
+    </div>
+</body>
+
+</html>

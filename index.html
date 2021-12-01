@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login</title>
+  <link rel="stylesheet" href="./index.css" />
+  <script src="SecurityManager.js"></script>
+</head>
+
+<script>
+  function handleAdminLogin() {
+    let username = document.getElementById("usernameAdmin").value;
+    let password = document.getElementById("passwordAdmin").value;
+    if (username.length == 0 || password.length == 0) {
+      alert("Please enter a username and password");
+    } else {
+      if (SecurityManager.ValidateAdmin(username, password)) {
+        window.location.href = "./adminHome.html";
+      } else {
+        alert("Invalid username or password");
+      }
+    }
+  }
+
+  function handleUserLogin() {
+    if (document.getElementById("usernameUser").value.length == 0 ||
+      document.getElementById("passwordUser").value.length == 0) {
+      alert("Please enter a username and password");
+      return;
+    }
+    var users = SecurityManager.GetAllUsers();
+    for (let i = 0; i < users.length; i++) {
+      const user = users[i];
+      if (user.Login == document.getElementById("usernameUser").value &&
+        user.Password == document.getElementById("passwordUser").value) {
+        localStorage.setItem("user", user.ID);
+        window.location.href = "./userHome.html";
+        return;
+      }
+    }
+    alert("Invalid username or password");
+    return;
+  }
+</script>
+
+<body>
+  <div class="container">
+    <div class="insideContainer">
+      <h1>Security Manager</h1>
+      <div class="loginCards">
+        <div class="loginCard">
+          <div class="loginHeader">
+            <h3 class="text">Login Admin</h3>
+          </div>
+          <label for="username">Username:</label>
+          <input id="usernameAdmin" type="username" name="username" />
+          <label for="password">Password:</label>
+          <input id="passwordAdmin" type="password" name="password" />
+          <div class="btnContainer">
+            <input type="button" name="submit" value="Login" onclick="handleAdminLogin()" />
+          </div>
+        </div>
+        <div class="loginCard">
+          <div class="loginHeader">
+            <h3 class="text">Login User</h3>
+          </div>
+          <label for="username">Username:</label>
+          <input id="usernameUser" type="username" name="username" />
+          <label for="password">Password:</label>
+          <input id="passwordUser" type="password" name="password" />
+          <div class="btnContainer">
+            <input type="button" name="submit" value="Login" onclick="handleUserLogin()" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+
+</html>

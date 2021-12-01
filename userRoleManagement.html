@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./userRoleManagement.css">
+    <script src="SecurityManager.js"></script>
+    <title>Role Management</title>
+</head>
+
+<script>
+
+    var isEditMode = false;
+    var selectedUserRoleForEdit = null;
+
+    let handleEdit = function (id) {
+        isEditMode = true;
+        selectedUserRoleForEdit = SecurityManager.GetUserRoleById(id);
+        document.getElementById("role").value = selectedUserRoleForEdit.RoleIndex;
+        document.getElementById("user").selectedIndex = selectedUserRoleForEdit.UserIndex;
+    }
+
+    //error function
+    let errorFunction = function (error) {
+        alert(error);
+    }
+
+    //delete success function
+    let updateTableForDelete = function (id) {
+        let tableRows = document.getElementsByTagName("tr");
+        for (let i = 1; i < tableRows.length; i++) {
+            if (tableRows[i].cells[0].innerText == id) {
+                tableRows[i].remove();
+                break;
+            };
+        }
+    }
+
+    //save success function
+    let updateTableForSave = function (record) {
+        if (isEditMode) {
+            let tableRows = document.getElementsByTagName("tr");
+            for (let i = 1; i < tableRows.length; i++) {
+                if (tableRows[i].cells[0].innerText == selectedUserRoleForEdit.ID) {
+                    tableRows[i].cells[1].innerText = record.UserName;
+                    tableRows[i].cells[2].innerText = record.RoleName;
+                    tableRows[i].cells[3].innerHTML = '<a id="edit">Edit</a>';
+                    tableRows[i].cells[4].innerHTML = '<a id="delete">Delete</a>';
+                    tableRows[i].cells[3].onclick = function () {
+                        var id = this.parentNode.childNodes[0].innerText
+                        handleEdit(id);
+                    };
+                    tableRows[i].cells[4].onclick = function () {
+                        var id = this.parentNode.childNodes[0].innerText
+                        if (confirm("Are you sure you want to delete user-role with id: " + id)) {
+                            SecurityManager.DeleteUserRole(id, updateTableForDelete, errorFunction);
+                        }
+                    }
+                }
+            }
+            isEditMode = false;
+            selectedUserRoleForEdit = null;
+        } else {
+            var table = document.getElementById("table");
+            var row = table.insertRow(table.rows.length);
+            var cell1 = row.insertCell(0);
+            var cell3 = row.insertCell(1);
+            var cell2 = row.insertCell(2);
+            var cell4 = row.insertCell(3);
+            var cell5 = row.insertCell(4);
+            cell1.innerText = record.ID;
+            cell2.innerText = record.RoleName;
+            cell3.innerText = record.UserName;
+            cell4.innerHTML = '<a id="edit">Edit</a>';
+            cell5.innerHTML = '<a id="delete">Delete</a>';
+            cell4.onclick = function () {
+                var id = this.parentNode.childNodes[0].innerText
+                handleEdit(id);
+            }
+            cell5.onclick = function () {
+                var id = this.parentNode.childNodes[0].innerText
+                if (confirm("Are you sure you want to delete user-role with id: " + id)) {
+                    SecurityManager.DeleteUserRole(id, updateTableForDelete, errorFunction);
+                }
+            }
+        }
+    }
+
+    function loadUserRoles() {
+        var table = document.getElementById("table");
+        var userRoles = SecurityManager.GetAllUserRoles();
+        for (const key in userRoles) {
+            const userRole = userRoles[key];
+            var row = table.insertRow(table.rows.length);
+            var cell1 = row.insertCell(0);
+            var cell3 = row.insertCell(1);
+            var cell2 = row.insertCell(2);
+            var cell4 = row.insertCell(3);
+            var cell5 = row.insertCell(4);
+            cell1.innerText = userRole.ID;
+            cell2.innerText = userRole.RoleName;
+            cell3.innerText = userRole.UserName;
+            cell4.innerHTML = '<a id="edit">Edit</a>';
+            cell5.innerHTML = '<a id="delete">Delete</a>';
+            cell4.onclick = function () {
+                var id = this.parentNode.childNodes[0].innerText
+                handleEdit(id);
+            }
+            cell5.onclick = function () {
+                var id = this.parentNode.childNodes[0].innerText
+                if (confirm("Are you sure you want to delete user-role permission with id: " + id)) {
+                    SecurityManager.DeleteUserRole(id, updateTableForDelete, errorFunction);
+                }
+            }
+        }
+    }
+
+    function Main() {
+        var roles = SecurityManager.GetAllRoles();
+        var users = SecurityManager.GetAllUsers();
+        var cmbRoles = document.getElementById('role');
+        for (var i = 0; i < roles.length; i++) {
+            var opt = document.createElement("option");
+            opt.setAttribute("value", roles[i].ID);
+            opt.innerText = roles[i].RoleName;
+            cmbRoles.appendChild(opt);
+        }
+
+        var cmbUsers = document.getElementById('user');
+        for (var i = 0; i < users.length; i++) {
+            var opt = document.createElement("option");
+            opt.setAttribute("value", users[i].ID);
+            opt.innerText = users[i].Login;
+            cmbUsers.appendChild(opt);
+        }
+        loadUserRoles();
+    }
+
+    function clearFields() {
+        document.getElementById("role").selectedIndex = 0;
+        document.getElementById("user").selectedIndex = 0;
+    }
+
+    function isUserRoleUnique(roleName, userName) {
+        var userRolls = SecurityManager.GetAllUserRoles();
+        for (const key in userRolls) {
+            const userRoll = userRolls[key];
+            if ((userRoll.RoleName).toUpperCase() == roleName.toUpperCase()
+                && (userRoll.UserName).toUpperCase() == userName.toUpperCase()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    function SaveUserRole() {
+        var userRoleObj = new Object();
+        userRoleObj.RoleName = document.getElementById("role")[document.getElementById("role").selectedIndex].innerText;
+        userRoleObj.RoleIndex = document.getElementById("role").selectedIndex;
+        userRoleObj.RoleID = document.getElementById("role")[document.getElementById("role").selectedIndex].value;
+        userRoleObj.UserName = document.getElementById("user")[document.getElementById("user").selectedIndex].innerText;
+        userRoleObj.UserIndex = document.getElementById("user").selectedIndex;
+        userRoleObj.UserID = document.getElementById("user")[document.getElementById("user").selectedIndex].value;
+        if (document.getElementById("role").value == "Select" || document.getElementById("user").value == "Select") {
+            alert("Please fill all fields");
+            return;
+        }
+        if (isEditMode) {
+            userRoleObj.ID = selectedUserRoleForEdit.ID;
+            SecurityManager.SaveUserRole(userRoleObj, updateTableForSave, errorFunction);
+            clearFields();
+            return;
+        }
+        if (isUserRoleUnique(userRoleObj.RoleName, userRoleObj.UserName)) {
+            SecurityManager.SaveUserRole(userRoleObj, updateTableForSave, errorFunction);
+            clearFields();
+        } else {
+            alert("User Role already exists");
+        }
+    }
+</script>
+
+<body onload="Main()">
+    <div class="navBar">
+        <h3><a href="adminHome.html">Home</a></h3>
+        <h3><a href="userManagement.html">User Management</a></h3>
+        <h3><a href="roleManagement.html">Role Management</a></h3>
+        <h3><a href="permissionManagement.html">Permission Management</a></h3>
+        <h3><a href="rolePermissionManagement.html">Role Permission Management</a></h3>
+        <h3><a href="userRoleManagement.html">User Role Management</a></h3>
+        <h3><a href="index.html">Logout</a></h3>
+    </div>
+    <div class="userRoleManagement">
+        <div class="userRoleManagementCard">
+            <div class="headerText">
+                <h3 class="text">User-Role Management</h3>
+            </div>
+            <label for="role">Role:</label>
+            <select name="role" id="role">
+                <option value="0" selected disabled hidden>Select</option>
+            </select>
+            <label for="user">User:</label>
+            <select name="user" id="user">
+                <option value="0" selected disabled hidden>Select</option>
+            </select>
+            <div class="btnContainer">
+                <input type="button" name="clear" value="Clear" onclick="clearFields()" />
+                <input type="button" name="submit" value="Save" onclick="SaveUserRole()" />
+            </div>
+        </div>
+        <div class="tableContainer">
+            <table id="table">
+                <tr>
+                    <th>ID</th>
+                    <th>User</th>
+                    <th>Role</th>
+                    <th>Edit</th>
+                    <th>Delete</th>
+                </tr>
+            </table>
+        </div>
+    </div>
+</body>
+
+</html>
